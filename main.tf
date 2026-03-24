@@ -5,6 +5,12 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+backend "s3" {
+    bucket = "terraform-state-lab6-dmytro-440893644383-us-east-1-an"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 provider "aws" {
@@ -42,6 +48,23 @@ resource "aws_instance" "web_server" {
   instance_type          = "t3.micro"
   key_name               = "keyforlab4"
   vpc_security_group_ids = [aws_security_group.lab6_sg.id]
+
+
+  user_data = <<-EOF
+    #!/bin/bash
+    apt-get update
+    apt-get install -y docker.io
+    systemctl start docker
+    systemctl enable docker
+    docker run -d --name lab5-container -p 80:80 dimakitcenko5/lab5-webapp:latest
+    docker run -d \
+      --name watchtower \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      containrrr/watchtower \
+      --interval 30
+  EOF
+
+
 
 
  tags = {
